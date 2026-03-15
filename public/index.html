@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SportSnap Tutor — AI Sports Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #F5F0E8;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  :root {
+    --forest: #1A3C2B;
+    --lime: #A8D84E;
+    --cream: #F5F0E8;
+    --pale: #EAF4D6;
+    --white: #ffffff;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.22);
+    --text-primary: #1a1a1a;
+    --text-secondary: #5a6470;
+    --text-muted: #8a9299;
+    --bg-secondary: #edeae2;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 680px;
+    background: var(--white);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  }
+
+  /* ── Header ── */
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #logo {
+    width: 42px; height: 42px;
+    background: var(--forest);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #logo svg { width: 24px; height: 24px; }
+
+  #header-text h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  #header-text p { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+
+  #header-badge {
+    margin-left: auto;
+    background: var(--pale);
+    color: #3B6D11;
+    font-size: 11px; font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #c0dd97;
+    white-space: nowrap;
+  }
+
+  /* ── Sport selector ── */
+  .section-label {
+    font-size: 11px; font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+
+  #sport-bar {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 1.1rem;
+  }
+
+  .sport-chip {
+    font-size: 12.5px; font-weight: 500;
+    padding: 5px 12px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--white); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+
+  .sport-chip:hover { border-color: var(--border-hover); background: var(--bg-secondary); }
+
+  .sport-chip.active {
+    background: var(--forest); color: var(--lime);
+    border-color: var(--forest);
+  }
+
+  /* ── Chat window ── */
+  #chat-window {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    min-height: 340px; max-height: 400px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 0.8rem;
+    scroll-behavior: smooth;
+  }
+
+  .msg { display: flex; gap: 8px; align-items: flex-start; animation: fadeUp 0.22s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+  }
+
+  .avatar.ai {
+    background: var(--forest); color: var(--lime);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+  }
+
+  .avatar.user { background: #dbeafe; color: #1e40af; font-size: 10px; }
+
+  .bubble {
+    max-width: 80%; padding: 9px 13px; border-radius: 13px;
+    font-size: 13.5px; line-height: 1.58; color: var(--text-primary);
+  }
+
+  .msg.ai .bubble {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+  }
+
+  .msg.user .bubble {
+    background: var(--forest); color: #daf0a8;
+    border-top-right-radius: 4px;
+  }
+
+  /* ── Typing indicator ── */
+  .typing-dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--text-muted);
+    animation: blink 1.2s infinite; margin: 0 2px;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; }
+  }
+
+  /* ── Quick questions ── */
+  #quick-qs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.8rem; }
+
+  .quick-btn {
+    font-size: 12px; font-family: 'DM Sans', sans-serif;
+    padding: 5px 11px; border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--white); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+
+  .quick-btn:hover {
+    background: var(--bg-secondary); color: var(--text-primary);
+    border-color: var(--border-hover);
+  }
+
+  /* ── Input row ── */
+  #input-row { display: flex; gap: 8px; align-items: center; }
+
+  #user-input {
+    flex: 1; padding: 10px 13px; font-size: 13.5px;
+    font-family: 'DM Sans', sans-serif;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--white); color: var(--text-primary);
+    outline: none; transition: border-color 0.15s;
+  }
+
+  #user-input::placeholder { color: var(--text-muted); }
+  #user-input:focus { border-color: var(--forest); }
+
+  #send-btn {
+    width: 38px; height: 38px; border-radius: var(--radius-md);
+    background: var(--forest); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: opacity 0.15s, transform 0.1s;
+  }
+
+  #send-btn:hover { opacity: 0.88; }
+  #send-btn:active { transform: scale(0.96); }
+  #send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  #send-btn svg { width: 16px; height: 16px; fill: var(--lime); }
+
+  /* ── Error banner ── */
+  #error-banner {
+    display: none;
+    background: #fef2f2; border: 1px solid #fca5a5;
+    color: #b91c1c; font-size: 12px;
+    padding: 8px 12px; border-radius: var(--radius-md);
+    margin-bottom: 8px;
+  }
+
+  /* ── Footer ── */
+  #footer {
+    margin-top: 1rem; padding-top: 0.8rem;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  #footer p { font-size: 11px; color: var(--text-muted); }
+  #footer span { font-size: 11px; font-weight: 500; color: var(--forest); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="header">
+    <div id="logo">
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="#A8D84E" stroke-width="1.5"/>
+        <path d="M8 12h8M12 8v8" stroke="#A8D84E" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div id="header-text">
+      <h1>SportSnap Tutor</h1>
+      <p>AI-powered sports coach — ask anything</p>
+    </div>
+    <div id="header-badge">Next Play</div>
+  </div>
+
+  <div class="section-label">Choose a sport</div>
+  <div id="sport-bar">
+    <div class="sport-chip active" data-sport="Basketball">Basketball</div>
+    <div class="sport-chip" data-sport="Soccer">Soccer</div>
+    <div class="sport-chip" data-sport="Baseball">Baseball</div>
+    <div class="sport-chip" data-sport="American Football">American Football</div>
+    <div class="sport-chip" data-sport="Tennis">Tennis</div>
+    <div class="sport-chip" data-sport="Ice Hockey">Ice Hockey</div>
+    <div class="sport-chip" data-sport="Cricket">Cricket</div>
+    <div class="sport-chip" data-sport="Volleyball">Volleyball</div>
+  </div>
+
+  <div id="chat-window">
+    <div class="msg ai">
+      <div class="avatar ai">SP</div>
+      <div class="bubble">Hey! I'm your <strong>SportSnap Tutor</strong>. I can teach you rules, strategy, history, and positions for any sport. You've selected <strong>Basketball</strong> — what would you like to learn?</div>
+    </div>
+  </div>
+
+  <div id="error-banner"></div>
+
+  <div class="section-label">Quick questions</div>
+  <div id="quick-qs"></div>
+
+  <div id="input-row">
+    <input id="user-input" type="text" placeholder="Ask about rules, strategy, positions…" />
+    <button id="send-btn">
+      <svg viewBox="0 0 16 16"><path d="M2 8l12-6-4 6 4 6-12-6z"/></svg>
+    </button>
+  </div>
+
+  <div id="footer">
+    <p>Built by Chaitra Aladakatti Ranganath · Next Play Assessment</p>
+    <span>SportSnap v1.0</span>
+  </div>
+
+</div>
+
+<script>
+  // ── Quick questions per sport ──────────────────────────────────────────
+  const QUICK = {
+    "Basketball":        ["How does scoring work?", "What is a double-dribble?", "Explain the shot clock", "What are the 5 positions?"],
+    "Soccer":            ["What is offside?", "How do penalty shootouts work?", "Explain the yellow card", "What is a hat trick?"],
+    "Baseball":          ["What is an inning?", "How does batting order work?", "Explain a strikeout", "What is a balk?"],
+    "American Football": ["What is a first down?", "How does scoring work?", "Explain a blitz", "What is a safety?"],
+    "Tennis":            ["How is scoring counted?", "What is a tiebreak?", "Explain a fault", "What is an ace?"],
+    "Ice Hockey":        ["How is icing called?", "Explain a power play", "What is offsides?", "How long are periods?"],
+    "Cricket":           ["What is a wicket?", "Explain LBW", "How does run scoring work?", "What is a maiden over?"],
+    "Volleyball":        ["How many hits per side?", "What is a libero?", "Explain rotation rules", "How is a set scored?"],
+  };
+
+  let selectedSport = "Basketball";
+  let isTyping      = false;
+  let chatHistory   = [];  // { role, content } array sent to server
+
+  const chatWindow  = document.getElementById("chat-window");
+  const quickQsDiv  = document.getElementById("quick-qs");
+  const userInput   = document.getElementById("user-input");
+  const sendBtn     = document.getElementById("send-btn");
+  const errorBanner = document.getElementById("error-banner");
+
+  // ── Helpers ──────────────────────────────────────────────────────────
+  function showError(msg) {
+    errorBanner.textContent = msg;
+    errorBanner.style.display = "block";
+    setTimeout(() => { errorBanner.style.display = "none"; }, 5000);
+  }
+
+  function renderQuickQs(sport) {
+    quickQsDiv.innerHTML = "";
+    (QUICK[sport] || []).forEach(q => {
+      const btn = document.createElement("button");
+      btn.className   = "quick-btn";
+      btn.textContent = q;
+      btn.onclick     = () => sendMessage(q);
+      quickQsDiv.appendChild(btn);
+    });
+  }
+
+  function addMessage(role, text) {
+    const wrap = document.createElement("div");
+    wrap.className = `msg ${role}`;
+
+    const av = document.createElement("div");
+    av.className   = `avatar ${role}`;
+    av.textContent = role === "ai" ? "SP" : "You";
+
+    const bub = document.createElement("div");
+    bub.className = "bubble";
+    bub.innerHTML = text
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br>");
+
+    wrap.appendChild(av);
+    wrap.appendChild(bub);
+    chatWindow.appendChild(wrap);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function showTyping() {
+    const wrap = document.createElement("div");
+    wrap.className = "msg ai";
+    wrap.id = "typing-indicator";
+    const av = document.createElement("div");
+    av.className   = "avatar ai";
+    av.textContent = "SP";
+    const bub = document.createElement("div");
+    bub.className = "bubble";
+    bub.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+    wrap.appendChild(av);
+    wrap.appendChild(bub);
+    chatWindow.appendChild(wrap);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById("typing-indicator");
+    if (el) el.remove();
+  }
+
+  // ── Send message ─────────────────────────────────────────────────────
+  async function sendMessage(text) {
+    const msg = (text || userInput.value).trim();
+    if (!msg || isTyping) return;
+
+    userInput.value   = "";
+    isTyping          = true;
+    sendBtn.disabled  = true;
+
+    addMessage("user", msg);
+    showTyping();
+
+    // Add to local history before sending
+    chatHistory.push({ role: "user", content: msg });
+
+    try {
+      const res = await fetch("/api/chat", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          sport:   selectedSport,
+          message: msg,
+          history: chatHistory.slice(0, -1),  // history excluding current message
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Server error");
+      }
+
+      removeTyping();
+      addMessage("ai", data.reply);
+
+      // Add AI reply to history
+      chatHistory.push({ role: "assistant", content: data.reply });
+
+      // Keep history to last 20 entries (10 turns)
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+    } catch (err) {
+      removeTyping();
+      showError("Could not reach the server. Make sure it is running on localhost:3000.");
+      console.error(err);
+      // Remove the failed user message from history
+      chatHistory.pop();
+    }
+
+    isTyping         = false;
+    sendBtn.disabled = false;
+    userInput.focus();
+  }
+
+  // ── Sport switching ───────────────────────────────────────────────────
+  document.querySelectorAll(".sport-chip").forEach(chip => {
+    chip.onclick = () => {
+      document.querySelectorAll(".sport-chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      selectedSport = chip.dataset.sport;
+      chatHistory   = [];  // reset history on sport switch
+      renderQuickQs(selectedSport);
+      chatWindow.innerHTML = "";
+      addMessage("ai", `Sport switched to **${selectedSport}**! I'm ready to teach you everything about it. What would you like to know — rules, strategy, positions, or history?`);
+    };
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  sendBtn.onclick          = () => sendMessage();
+  userInput.onkeydown      = e => { if (e.key === "Enter") sendMessage(); };
+  renderQuickQs("Basketball");
+</script>
+</body>
+</html>
